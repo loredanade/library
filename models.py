@@ -20,7 +20,6 @@ class Loan(db.Entity):
     id = PrimaryKey(int, auto=True)
     book = Required('Book')
     name = Required(str)
-    mobile_number=Required(str)
     created_at = Required(date, default=lambda: date.today())
     returned_at = Optional(date)
 

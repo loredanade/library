@@ -224,7 +224,7 @@ label {
             <option value="published"  {{ 'selected' if book.status == 'published' else '' }}>Published</option>
             <option value="unpublished" {{ 'selected' if book.status == 'unpublished' else '' }}>Unpublished</option>
           </select>
-          {% if book.status == 'published' %}
+          {% if book.status == 'published' and book.available_quantity > 0%}
           <button class="btn-loan" data-book-id="{{ book.id }}">New Loan</button>
         {% endif %}          
         <a href="/books/{{book.id}}" class="link-reservations"
@@ -239,9 +239,9 @@ label {
     <div class="modal-content">
       <span class="close" id="close-modal">&times;</span>
       <h2>Add loan</h2>
-      <form>
+      <form id="loanForm">
         <label for="loan-name">User name:</label>
-        <input type="text" id="loan-name" name="loan-name" required><br><br>
+        <input type="text" id="loanName" name="loan-name" required><br><br>
         <button type="submit">Submit</button>
       </form>
     </div>
@@ -362,6 +362,45 @@ fetch("/books", {method: "POST",  headers: {
 
 
 }
+const loanForm = document.getElementById('loanForm');
+
+loanForm.addEventListener('submit', function (event) {
+  event.preventDefault();
+
+  const nameInput = document.getElementById('loanName');
+  const name = nameInput.value;
+
+  if (!name || !selectedBookId) {
+    alert("Please enter name and make sure a book is selected.");
+    return;
+  }
+
+  fetch('/loans', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      name: name,
+      book_id: selectedBookId
+    })
+  })
+  .then(res => {
+   
+    return res.json();
+  })
+  .then(data => {
+    console.log("Loan added:", data);
+    alert("Loan successfully added.");
+    loanModal.style.display = "none";
+    nameInput.value = "";
+    location.reload();
+  })
+  .catch(err => {
+    console.error("Error creating loan:", err);
+    alert("Failed to create loan.");
+  });
+});
 document.querySelectorAll('.book-status-select').forEach(select => {
     select.addEventListener('change', (event) => {
       const newStatus = event.target.value;
