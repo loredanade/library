@@ -220,12 +220,14 @@ label {
           </p>
         </div>
         <div class="card-right">
-          <select name="status">
+          <select name="status" data-book-id="{{ book.id }}" class="book-status-select">
             <option value="published"  {{ 'selected' if book.status == 'published' else '' }}>Published</option>
             <option value="unpublished" {{ 'selected' if book.status == 'unpublished' else '' }}>Unpublished</option>
           </select>
-          <button class="btn-loan" id="loan-btn" data-book-id="{{book.id}}">New Loan</button>
-          <a href="/books/{{book.id}}" class="link-reservations"
+          {% if book.status == 'published' %}
+          <button class="btn-loan" data-book-id="{{ book.id }}">New Loan</button>
+        {% endif %}          
+        <a href="/books/{{book.id}}" class="link-reservations"
             >View Loans</a
           >
         </div>
@@ -346,8 +348,45 @@ fetch("/books", {method: "POST",  headers: {
     status,
     quantity: parseInt(quantity)
   })
-})
+}).then(res => {
+        return res.json();
+      })
+      .then(data => {
+        console.log("new book:", data);
+        location.reload();
+      })
+      .catch(err => {
+        console.error("Error adding book:", err);
+        alert("Something went wrong");
+      });
+
+
 }
+document.querySelectorAll('.book-status-select').forEach(select => {
+    select.addEventListener('change', (event) => {
+      const newStatus = event.target.value;
+      const bookId = event.target.dataset.bookId;
+
+      fetch(`/books/${bookId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: newStatus })
+      })
+      .then(res => {
+        return res.json();
+      })
+      .then(data => {
+        console.log("Status updated:", data);
+        location.reload();
+      })
+      .catch(err => {
+        console.error("Error updating status:", err);
+        alert("Somethint went wrong");
+      });
+    });
+  });
   </script>
   </body>
 </html>

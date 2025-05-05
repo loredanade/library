@@ -6,6 +6,17 @@ from datetime import date, datetime
 
 app = Flask(__name__)
 
+def update_book(id,json_request):
+    try:
+        status=json_request["status"]
+        with db_session:
+            book=Book[id]
+            book.status=status
+            response={"response": "Success"}
+            return response
+    except Exception as e:
+        return {"response": "Fail", "error": str(e)}
+
 def add_book(json_request):
     try:
         title=json_request["title"]
@@ -57,7 +68,20 @@ def addBook():
         return make_response(jsonify(response), 400)
     response=add_book(json_request)
     if response["response"]=="Success":
-        return render_template('index.html')
+         return make_response(jsonify(response), 200)
+    return make_response(jsonify(response), 400)
+
+@app.route("/books/<int:book_id>", methods=["PATCH"])
+@db_session
+def updateBookStatus(book_id):
+    try:
+        json_request=request.json
+    except Exception as e:
+        response={"response": str(e)}
+        return make_response(jsonify(response), 400)
+    response=update_book(book_id,json_request)
+    if response["response"]=="Success":
+        return make_response(jsonify(response), 200)
     return make_response(jsonify(response), 400)
 
 if __name__== "__main__":
