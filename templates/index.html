@@ -108,11 +108,100 @@ body {
     .link-reservations:hover {
       text-decoration: underline;
     }
+        /* Modal Styles */
+        .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+      padding-top: 60px;
+    }
+
+    .modal-content {
+      background-color: #ffffff;
+      margin: 5% auto;
+      padding: 2rem;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 500px;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 2rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+    }
+
+    .modal button {
+      background-color: #84ccaa;
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    input[type="text"],
+input[type="number"] {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 1rem;
+  border: 1px solid #84ccaa;
+  border-radius: 6px;
+  background-color: #f1fdf7;
+  color: #2f4f4f;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus {
+  border-color: #5aa382;
+  box-shadow: 0 0 0 2px rgba(90, 163, 130, 0.2);
+}
+label {
+  font-weight: bold;
+  color: #495057;
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.btn-add-book {
+  background-color: #84ccaa;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+}
+
+.btn-add-book:hover {
+  background-color: #6bb996;
+}
+
+
+
     </style>
   </head>
   <body>
-    <h1>Popis knjiga</h1>
-
+    <h1>Books</h1>
+    <button id="openAddModal" class="btn-add-book">New book</button>
     <div class="card-container">
       <!-- Knjiga 1 -->
       {% for book in books %}
@@ -135,7 +224,7 @@ body {
             <option value="published"  {{ 'selected' if book.status == 'published' else '' }}>Published</option>
             <option value="unpublished" {{ 'selected' if book.status == 'unpublished' else '' }}>Unpublished</option>
           </select>
-          <button class="btn-loan">New Loan</button>
+          <button class="btn-loan" id="loan-btn" data-book-id="{{book.id}}">New Loan</button>
           <a href="/books/{{book.id}}" class="link-reservations"
             >View Loans</a
           >
@@ -143,6 +232,122 @@ body {
       </div>
 
       {% endfor %}
+   
+  <div id="loanModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="close-modal">&times;</span>
+      <h2>Add loan</h2>
+      <form>
+        <label for="loan-name">User name:</label>
+        <input type="text" id="loan-name" name="loan-name" required><br><br>
+        <button type="submit">Submit</button>
+      </form>
     </div>
+  </div>
+<div id="addBookModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="close-add-modal">&times;</span>
+      <h2>Add new book</h2>
+      <form id="addBookForm" >
+        <label for="title">Title:</label>
+        <input type="text" name="title" required />
+  
+        <label for="author">Author:</label>
+        <input type="text" name="author" required />
+  
+        <!-- <label for="description">Opis:</label>
+        <input type="text" name="description" required /> -->
+        <label for="type">Type:</label>
+        <input type="text" name="type"/>
+        <label for="genres">Genres:</label>
+        <input type="text" name="genres" />
+  
+        <label for="published_date">Published date (dd-mm-yyyy):</label>
+        <input type="text" name="published_date" required />
+  
+        <label for="quantity">Quantity:</label>
+        <input type="number" name="quantity" required />
+  
+        <label for="status">Status:</label>
+        <select name="status">
+          <option value="published">Published</option>
+          <option value="unpublished">Unpublished</option>
+        </select>
+  
+        <button type="submit">Submit</button>
+      </form>
+    </div>
+  </div>
+  
+
+  <script>
+let selectedBookId = null; // globalna varijabla
+
+const loanButtons = document.querySelectorAll('.btn-loan');
+const loanModal = document.getElementById('loanModal');
+const closeModal = document.getElementById('close-modal');
+
+loanButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    selectedBookId = button.dataset.bookId; // spremi ID
+    console.log("Odabrani book ID:", selectedBookId);
+    loanModal.style.display = "block";
+  });
+});
+
+closeModal.onclick = function () {
+  loanModal.style.display = "none";
+};
+
+window.onclick = function (event) {
+  if (event.target === loanModal) {
+    loanModal.style.display = "none";
+  }
+};
+const openAddModal = document.getElementById('openAddModal');
+const addBookModal = document.getElementById('addBookModal');
+const closeAddModal = document.getElementById('close-add-modal');
+
+openAddModal.onclick = () => addBookModal.style.display = 'block';
+closeAddModal.onclick = () => addBookModal.style.display = 'none';
+
+window.onclick = function (event) {
+  if (event.target === addBookModal) {
+    addBookModal.style.display = "none";
+  }
+};
+const addBookForm = document.getElementById("addBookForm");
+
+addBookForm.addEventListener("submit", function (e) {
+  e.preventDefault(); // spriječi reload
+
+  const formData = new FormData(addBookForm);
+  const title = formData.get("title");
+  const author = formData.get("author");
+  const published_date = formData.get("published_date");
+  const type = formData.get("type");
+  const genres = formData.get("genres");
+  const status = formData.get("status");
+  const quantity = formData.get("quantity");
+
+  addBook(title, author, published_date, type, genres, status, quantity);
+});
+function addBook(title, author, published_date, type, genres, status, quantity){
+   
+fetch("/books", {method: "POST",  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    title,
+    author,
+    published_date,
+    type,
+    genres,
+    status,
+    quantity: parseInt(quantity)
+  })
+})
+}
+  </script>
   </body>
 </html>

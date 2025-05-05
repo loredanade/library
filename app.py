@@ -6,32 +6,6 @@ from datetime import date, datetime
 
 app = Flask(__name__)
 
-@app.route('/', methods=["GET"])
-@db_session
-def getBooks():
-    response = get_books()
-    if response["response"]=="Success":
-        return render_template('index.html', books=response["data"])
-    return make_response(jsonify(response), 400)
-
-
-@app.route('/books', methods=["POST"])
-@db_session
-def addBook():
-    try:
-        json_request=request.json
-    except Exception as e:
-        response={"response": str(e)}
-        return make_response(jsonify(response), 400)
-    response=add_book(json_request)
-    if response["response"]=="Success":
-        return make_response(jsonify(response), 200)
-    return make_response(jsonify(response), 400)
-
-if __name__== "__main__":
-    app.run(port=8080)
-
-
 def add_book(json_request):
     try:
         title=json_request["title"]
@@ -63,3 +37,30 @@ def get_books():
             return response
     except Exception as e:
         return {"response": "Fail", "error": str(e)}
+
+@app.route('/', methods=["GET"])
+@db_session
+def getBooks():
+    response = get_books()
+    if response["response"]=="Success":
+        return render_template('index.html', books=response["data"])
+    return make_response(jsonify(response), 400)
+
+
+@app.route('/books', methods=["POST"])
+@db_session
+def addBook():
+    try:
+        json_request=request.json
+    except Exception as e:
+        response={"response": str(e)}
+        return make_response(jsonify(response), 400)
+    response=add_book(json_request)
+    if response["response"]=="Success":
+        return render_template('index.html')
+    return make_response(jsonify(response), 400)
+
+if __name__== "__main__":
+    app.run(port=8080)
+
+
