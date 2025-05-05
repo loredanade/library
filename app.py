@@ -66,6 +66,27 @@ def get_books():
     except Exception as e:
         return {"response": "Fail", "error": str(e)}
     
+def get_book(book_id):
+    try:
+        with db_session:
+            book = Book.get(id=book_id)
+            if not book:
+                return None, "Book not found"
+            loans = [
+                {
+                    "name": loan.name,
+                    "created_at": loan.created_at.strftime('%d-%m-%Y')
+                }
+                for loan in book.loans if loan.returned_at is None
+            ]
+            
+            book_data = book.to_dict()
+            book_data["loans"] = loans
+            return book_data, None
+
+    except Exception as e:
+        return None, str(e)
+    
 def get_loans():
     try:
         with db_session:
@@ -132,6 +153,18 @@ def getLoans():
     if response["response"]=="Success":
         return make_response(jsonify(response), 200)
     return make_response(jsonify(response), 400)
+
+@app.route('/books/<int:book_id>')
+@db_session
+def book_loans(book_id):
+    try:
+        book_data, error = get_book(book_id)
+        if error:
+            return jsonify({"response": "Fail", "error": error}), 404
+        return render_template("book-loans.html",data=book_data)
+    except Exception as e:
+        return jsonify({"response": "Fail", "error": str(e)}), 500
+
 
 if __name__== "__main__":
     app.run(port=8080)
