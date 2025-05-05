@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="hr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Books</title>
+    <style>
+body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      padding: 2rem;
+      margin: 0;
+    }
+
+    h1 {
+      text-align: center;
+      color: #343a40;
+    }
+
+    .card-container {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    @media (min-width: 900px) {
+      .card-container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .card {
+      background-color: #ffffff;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .card-left {
+      flex: 2;
+    }
+
+    .card-right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .card h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1.2rem;
+      color: #212529;
+    }
+
+    .card p {
+      margin: 0.25rem 0;
+      color: #495057;
+      font-size: 0.95rem;
+    }
+
+    .label {
+      font-weight: bold;
+      color: #6c757d;
+    }
+
+    select {
+      padding: 0.4rem 0.6rem;
+      font-size: 0.95rem;
+      border: 1px solid #84ccaa;
+      border-radius: 6px;
+      background-color: #f1fdf7;
+      color: #2f4f4f;
+      outline: none;
+      transition: border 0.2s ease;
+    }
+
+    select:focus {
+      border-color: #5aa382;
+    }
+
+    .btn-loan {
+      padding: 0.45rem 0.9rem;
+      font-size: 0.95rem;
+      background-color: #84ccaa;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn-loan:hover {
+      background-color: #6bb996;
+    }
+
+    .link-reservations {
+      font-size: 0.9rem;
+      color: #5aa382;
+      text-decoration: none;
+    }
+
+    .link-reservations:hover {
+      text-decoration: underline;
+    }
+    </style>
+  </head>
+  <body>
+    <h1>Popis knjiga</h1>
+
+    <div class="card-container">
+      <!-- Knjiga 1 -->
+      {% for book in books %}
+      <div class="card">
+        <div class="card-left">
+          <h2>{{book.title}}</h2>
+          <p><span class="label">Author:</span> {{book.author}}</p>
+          <p><span class="label">Description:</span> {{book.description}}</p>
+          <p><span class="label">Genres:</span> {{book.genres}}</p>
+          <p>
+            <span class="label">Published day:</span> {{book.published_date}}
+          </p>
+          <p><span class="label">Quantity:</span> {{book.quantity}}</p>
+          <p>
+            <span class="label">Available:</span> {{book.available_quantity}}
+          </p>
+        </div>
+        <div class="card-right">
+          <select name="status">
+            <option value="published"  {{ 'selected' if book.status == 'published' else '' }}>Published</option>
+            <option value="unpublished" {{ 'selected' if book.status == 'unpublished' else '' }}>Unpublished</option>
+          </select>
+          <button class="btn-loan">New Loan</button>
+          <a href="/books/{{book.id}}" class="link-reservations"
+            >View Loans</a
+          >
+        </div>
+      </div>
+
+      {% endfor %}
+    </div>
+  </body>
+</html>
