@@ -1,4 +1,4 @@
-from flask import Flask, make_response, jsonify, request, render_template
+from flask import Flask, make_response, jsonify, request, render_template, redirect
 from pony.orm import db_session, select
 from models import Book,Loan
 from datetime import date, datetime
@@ -33,6 +33,18 @@ def update_book(id,json_request):
             return response
     except Exception as e:
         return {"response": "Fail", "error": str(e)}
+def update_loan(id,json_request):
+    try:
+        with db_session:
+            loan=Loan[id]
+            allowed_fields = {'returned_at', 'name'}
+            for key, value in json_request.items():
+                if key in allowed_fields:
+                    setattr(loan, key, value)
+            response={"response": "Success"}
+            return response
+    except Exception as e:
+        return {"response": "Fail", "error": str(e)}
 
 def add_book(json_request):
     try:
@@ -44,7 +56,6 @@ def add_book(json_request):
         genres=json_request.get("genres", [])  
         try:
             published_date=datetime.strptime(json_request["published_date"], '%d-%m-%Y')
-            print(published_date)
         except ValueError:
             published_date=None
         with db_session:
@@ -72,16 +83,26 @@ def get_book(book_id):
             book = Book.get(id=book_id)
             if not book:
                 return None, "Book not found"
+            
             loans = [
                 {
                     "name": loan.name,
-                    "created_at": loan.created_at.strftime('%d-%m-%Y')
+                    "created_at": loan.created_at.strftime('%d-%m-%Y'),
+                    "id": loan.id,
+                    "returned_at": loan.returned_at
                 }
                 for loan in book.loans if loan.returned_at is None
-            ]
-            
-            book_data = book.to_dict()
-            book_data["loans"] = loans
+            ]            
+            book_data = {
+                "id": book.id,
+                "title": book.title,
+                "author": book.author,
+                "published_date": book.published_date.strftime('%d-%m-%Y'),
+                "quantity": book.quantity,
+                "available_quantity": book.available_quantity,
+                "status": book.status,
+                "loans": loans
+            }
             return book_data, None
 
     except Exception as e:
@@ -123,7 +144,7 @@ def addBook():
 
 @app.route("/books/<int:book_id>", methods=["PATCH"])
 @db_session
-def updateBookStatus(book_id):
+def updateBook(book_id):
     try:
         json_request=request.json
     except Exception as e:
@@ -160,10 +181,18 @@ def book_loans(book_id):
     try:
         book_data, error = get_book(book_id)
         if error:
-            return jsonify({"response": "Fail", "error": error}), 404
+            return make_response(jsonify({"response": "Fail", "error": error}), 400)
         return render_template("book-loans.html",data=book_data)
     except Exception as e:
-        return jsonify({"response": "Fail", "error": str(e)}), 500
+        return make_response(jsonify({"response": "Fail", "error": str(e)}), 400)
+
+@app.route('/books/loans/<int:loan_id>', methods=['POST'])
+@db_session
+def mark_loan_as_returned( loan_id):
+    response=update_loan(loan_id, {"returned_at": datetime.now()})
+    if response["response"]=="Success":
+        return make_response(jsonify(response), 200)
+    return make_response(jsonify(response), 400)
 
 
 if __name__== "__main__":

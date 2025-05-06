@@ -68,8 +68,8 @@
             <td>{{ loan.name }}</td>
             <td>{{ loan.created_at}}</td>
             <td>
-              <form method="POST">
-                <button class="action-btn" type="submit">Mark as Returned</button>
+              <form id="loan-form-{{ loan.id }}" method="POST" action="/books/loans/{{ loan.id }}">
+                <button class="action-btn" type="button" onclick="markAsReturned('{{ data.id }}', '{{ loan.id }}')">Mark as Returned</button>
               </form>
             </td>
           </tr>
@@ -77,4 +77,29 @@
       </tbody>
     </table>
   </body>
+  <script>
+    function markAsReturned(bookId, loanId) {
+      const form = document.getElementById(`loan-form-${loanId}`);
+  
+      fetch(form.action, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.response === 'Success') {
+          location.reload()
+          alert('Loan marked as returned');
+        } else {
+          alert('Failed to mark as returned');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error marking loan as returned');
+      });
+    }
+  </script>
 </html>
