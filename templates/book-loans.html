@@ -14,6 +14,7 @@
       h1 {
         text-align: center;
         color: #343a40;
+        margin-bottom: 2rem;
       }
 
       table {
@@ -22,7 +23,8 @@
         border-collapse: collapse;
       }
 
-      th, td {
+      th,
+      td {
         padding: 1rem;
         text-align: left;
         border: 1px solid #ddd;
@@ -52,8 +54,9 @@
     </style>
   </head>
   <body>
-    <h1>{{ data.title }}</h1> 
-    
+    {% include 'navbar.html' %}
+    <h1>{{ data.title }}</h1>
+
     <table>
       <thead>
         <tr>
@@ -64,15 +67,25 @@
       </thead>
       <tbody>
         {% for loan in data.loans %}
-          <tr>
-            <td>{{ loan.name }}</td>
-            <td>{{ loan.created_at}}</td>
-            <td>
-              <form id="loan-form-{{ loan.id }}" method="POST" action="/books/loans/{{ loan.id }}">
-                <button class="action-btn" type="button" onclick="markAsReturned('{{ data.id }}', '{{ loan.id }}')">Mark as Returned</button>
-              </form>
-            </td>
-          </tr>
+        <tr>
+          <td>{{ loan.name }}</td>
+          <td>{{ loan.created_at}}</td>
+          <td>
+            <form
+              id="loan-form-{{ loan.id }}"
+              method="POST"
+              action="/books/{{data.id}}/loans/{{ loan.id }}"
+            >
+              <button
+                class="action-btn"
+                type="button"
+                onclick="markAsReturned('{{ data.id }}', '{{ loan.id }}')"
+              >
+                Mark as Returned
+              </button>
+            </form>
+          </td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
@@ -80,26 +93,26 @@
   <script>
     function markAsReturned(bookId, loanId) {
       const form = document.getElementById(`loan-form-${loanId}`);
-  
+
       fetch(form.action, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       })
-      .then(response => response.json())
-      .then(data => {
-        if (data.response === 'Success') {
-          location.reload()
-          alert('Loan marked as returned');
-        } else {
-          alert('Failed to mark as returned');
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('Error marking loan as returned');
-      });
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.response === "Success") {
+            location.reload();
+            alert("Loan marked as returned");
+          } else {
+            alert("Failed to mark as returned");
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("Error marking loan as returned");
+        });
     }
   </script>
 </html>

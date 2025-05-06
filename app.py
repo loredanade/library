@@ -20,6 +20,17 @@ def add_loan(json_request):
             return response
     except Exception as e:
          return {"response": "Fail", "error": str(e)}
+def remove_loan(book_id, loan_id):
+    try:
+        book=Book.get(id=int(book_id))
+        with db_session:
+            
+            update_book(book_id, {"available_quantity": book.available_quantity+1})
+            update_loan(loan_id, {"returned_at": datetime.now()})
+            response={"response": "Success"}
+            return response
+    except Exception as e:
+         return {"response": "Fail", "error": str(e)}
 
 def update_book(id,json_request):
     try:
@@ -186,10 +197,10 @@ def book_loans(book_id):
     except Exception as e:
         return make_response(jsonify({"response": "Fail", "error": str(e)}), 400)
 
-@app.route('/books/loans/<int:loan_id>', methods=['POST'])
+@app.route('/books/<int:book_id>/loans/<int:loan_id>', methods=['POST'])
 @db_session
-def mark_loan_as_returned( loan_id):
-    response=update_loan(loan_id, {"returned_at": datetime.now()})
+def mark_loan_as_returned(book_id, loan_id):
+    response=remove_loan(book_id,loan_id)
     if response["response"]=="Success":
         return make_response(jsonify(response), 200)
     return make_response(jsonify(response), 400)
