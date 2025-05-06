@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="hr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Loans</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f8f9fa;
+        padding: 2rem;
+        margin: 0;
+      }
+
+      h1 {
+        text-align: center;
+        color: #343a40;
+        margin-bottom: 2rem;
+      }
+
+      table {
+        width: 100%;
+        margin-top: 2rem;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 1rem;
+        text-align: left;
+        border: 1px solid #ddd;
+      }
+
+      th {
+        background-color: #84ccaa;
+        color: white;
+      }
+
+      tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+
+      .action-btn {
+        background-color: #84ccaa;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        border-radius: 6px;
+      }
+
+      .action-btn:hover {
+        background-color: #6bb996;
+      }
+    </style>
+  </head>
+  <body>
+    {% include 'navbar.html' %}
+    <h1>All loans</h1>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Book Title</th>
+          <th>User Name</th>
+          <th>Loan Date</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for loan in loans %}
+        <tr>
+          <td>{{ loan.book.title }}</td>
+          <td>{{ loan.name }}</td>
+          <td>{{ loan.created_at}}</td>
+          <td>
+            {% if loan.returned_at %}
+              Done
+            {% else %}
+              Active
+            {% endif %}
+          </td>
+          <td>
+            {% if not loan.returned_at %}
+              <form
+                id="loan-form-{{ loan.id }}"
+                method="POST"
+                action="/books/{{loan.book.id}}/loans/{{ loan.id }}"
+              >
+                <button
+                  class="action-btn"
+                  type="button"
+                  onclick="markAsReturned('{{ loan.book.id }}', '{{ loan.id }}')"
+                >
+                  Mark as Returned
+                </button>
+              </form>
+            {% else %}
+              Already returned
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+  <script>
+    function markAsReturned(bookId, loanId) {
+      const form = document.getElementById(`loan-form-${loanId}`);
+
+      fetch(form.action, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.response === "Success") {
+            location.reload();
+            alert("Loan marked as returned");
+          } else {
+            alert("Failed to mark as returned");
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("Error marking loan as returned");
+        });
+    }
+  </script>
+</html>

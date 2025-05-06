@@ -122,11 +122,17 @@ def get_book(book_id):
 def get_loans():
     try:
         with db_session:
-            db_query=select(l for l in Loan)[:]
-            result_list=[]
-            for q in db_query:
-                result_list.append(q.to_dict())
-            response= {"response": "Success", "data": result_list }
+            db_query = select(l for l in Loan)[:]
+            result_list = []
+            for loan in db_query:
+                loan_data = loan.to_dict()
+                loan_data["book"] = {
+                    "id": loan.book.id,
+                    "title": loan.book.title
+                }
+                result_list.append(loan_data)
+
+            response = {"response": "Success", "data": result_list}
             return response
     except Exception as e:
         return {"response": "Fail", "error": str(e)}
@@ -183,7 +189,7 @@ def addLoan():
 def getLoans():
     response = get_loans()
     if response["response"]=="Success":
-        return make_response(jsonify(response), 200)
+        return render_template("loans.html",loans=response["data"])
     return make_response(jsonify(response), 400)
 
 @app.route('/books/<int:book_id>')
