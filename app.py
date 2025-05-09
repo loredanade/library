@@ -1,10 +1,66 @@
 from flask import Flask, make_response, jsonify, request, render_template, redirect
 from pony.orm import db_session, select
 from models import Book,Loan
-from datetime import date, datetime
-
+from datetime import date, datetime, timedelta
 
 app = Flask(__name__)
+
+def get_loans_per_month():
+    try:
+        today = datetime.today()
+        print(today)
+        start_date = today.replace(day=1) - timedelta(days=365)  # 12 mjeseci unazad
+        print(start_date)
+        loans = select(l for l in Loan if l.created_at >= start_date)[:]
+        print(loans)
+        months = []
+        for i in reversed(range(12)):
+            month = (today.replace(day=1) - timedelta(days=30 * i)).strftime('%Y-%m')
+            months.append(month)
+
+        counts = []
+        for month in months:
+            count = 0
+            for loan in loans:
+                loan_month = loan.created_at.strftime('%Y-%m')
+                if loan_month == month:
+                    count += 1
+            counts.append(count)
+        print(counts)
+        # Formatiraj oznake za mjesec
+        labels = [datetime.strptime(m, '%Y-%m').strftime('%b %Y') for m in months]
+        print(labels)
+        return  { "response": "Success",
+                "data": {
+                    "labels": labels,
+                    "counts": counts
+                }}
+    
+    except Exception as e:
+        raise Exception(f"Error in get_loans_per_month: {str(e)}")
+
+
+def get_active_loans_per_book():
+    try:
+        with db_session:
+            books = select(b for b in Book)[:]
+            book_labels = []
+            book_counts = []
+
+            for book in books:
+                active_loans = sum(1 for loan in book.loans if loan.returned_at is None)
+                book_labels.append(book.title)
+                book_counts.append(active_loans)
+
+            return {
+                "response": "Success",
+                "data": {
+                    "book_labels": book_labels,
+                    "book_counts": book_counts
+                }
+            }
+    except Exception as e:
+        return {"response": "Fail", "error": str(e)}
 
 def add_loan(json_request):
     try:
@@ -210,6 +266,24 @@ def mark_loan_as_returned(book_id, loan_id):
     if response["response"]=="Success":
         return make_response(jsonify(response), 200)
     return make_response(jsonify(response), 400)
+
+@app.route('/visualizations', methods=["GET"])
+@db_session
+def loans_chart():
+    loans_response = get_loans_per_month()
+    books_response = get_active_loans_per_book()
+
+    if loans_response["response"] == "Success" and books_response["response"] == "Success":
+        return render_template(
+            "charts.html",
+            labels=loans_response["data"]["labels"],
+            counts=loans_response["data"]["counts"],
+            book_labels=books_response["data"]["book_labels"],
+            book_counts=books_response["data"]["book_counts"]
+        )
+    else:
+        error_message = loans_response.get("error") or books_response.get("error") or "Unknown error"
+        return make_response(jsonify({"response": "Fail", "error": error_message}), 400)
 
 
 if __name__== "__main__":
